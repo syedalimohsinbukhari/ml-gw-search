@@ -1,0 +1,20 @@
+[project]
+name = "ml-gw-search"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "blosc>=1.11.4",
+    "matplotlib>=3.10.9",
+    "numpy>=2.2.6",
+    "pandas>=2.3.3",
+    "pycbc>=2.9.0",
+    "setuptools==80.0.0",
+    "torch",
+    "tqdm>=4.67.3",
+    "typer>=0.25.1",
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
