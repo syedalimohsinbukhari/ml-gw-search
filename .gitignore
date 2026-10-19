@@ -7,3 +7,7 @@
 /dataSources/
 /dataSources.local.xml
 .idea/
+
+# Data files and Python bytecode
+*.hdf
+__pycache__/
