@@ -30,16 +30,18 @@ from apply import dtype
 from apply import get_coherent_network, get_coincident_network, get_base_network2
 
 ### Column names for regression parameter labels
+### Must match, in order, the values gen.py writes into waveform_params; the names follow
+### heads_spec.py of the q_value project (ml_practice_v2/src/gwml/heads_spec.py)
 PARAM_COLUMNS = [
-    'mass1',  # M_sun,  range [10, 50]
-    'mass2',  # M_sun,  range [10, mass1]
+    'mchirp',  # M_sun,  chirp mass of the two component masses, each drawn in [10, 50]
+    'q',  # m2/m1, range (0.2, 1], m2 <= m1
     'inclination',  # rad,    range [0, 2pi]
     'coa_phase',  # rad,    range [0, 2pi]
-    'pol_angle',  # rad,    range [0, 2pi]
+    'polarization_angle',  # rad,    range [0, 2pi]
     'declination',  # rad,    range [-pi/2, pi/2]
-    'right_ascension',  # rad,    range [0, 2pi]
-    'merger_time_gps',  # GPS seconds (O3a era, provenance only)
-    'merger_time_in_window',  # seconds from start of whitened window to coalescence
+    'ra',  # rad,    range [0, 2pi]
+    'injection_time',  # GPS seconds (O3a era); sets the detector response, stored as float32 (128 s resolution)
+    'merger_time',  # seconds from start of whitened window to the geocentric coalescence
 ]
 NUM_PARAMS = len(PARAM_COLUMNS)
 
