@@ -1,6 +1,6 @@
 # Handoff (ml-gw-search)
 
-Written 2026-10-19T22:10Z, on `thinkpad-t530`; State and Open updated 2026-10-22T06:27Z.
+Written 2026-10-19T22:10Z, on `thinkpad-t530`; State and Open updated 2026-10-22T06:52Z.
 This repository is the MLGWSC-1 code of Zelenka, Brügmann and Ohme (see `README.md`), used here to regenerate the training dataset of the `ml_practice_v2` q_value project.
 The working rules, the machines table, and the full state of that project are in `ml_practice_v2` (`CLAUDE.md`, `HANDOFF.md`, `BUGS.md`, `GENERATOR_OVERHAUL.md`); this file covers only what concerns this repository.
 
@@ -30,9 +30,9 @@ The working rules, the machines table, and the full state of that project are in
 
 ## State
 
-Updated 2026-10-22T06:27Z on `sarlws5-Precision-7820-Tower`.
+Updated 2026-10-22T06:52Z on `sarlws5-Precision-7820-Tower`.
 
-- Branch `dev`, tracking `origin/dev` (the user's fork); the history is `[dev-minor-4]` (a merge of the fork's and this machine's diverged histories), `[dev-minor-5]` (the remote-layout update of this file), the user's `[dev-minor-5]` and `[dev-minor-5-1]` (the pipeline note under `mlgwsc-1/` and a `.gitignore` line for `combined_repackaged.hdf`, pulled by a rebase), and then `[dev-minor-6]` (below).
+- Branch `dev`, tracking `origin/dev` (the user's fork); the history is `[dev-minor-4]` (a merge of the fork's and this machine's diverged histories), `[dev-minor-5]` (the remote-layout update of this file), the user's `[dev-minor-5]` and `[dev-minor-5-1]` (the pipeline note under `mlgwsc-1/` and a `.gitignore` line for `combined_repackaged.hdf`, pulled by a rebase), and then `[dev-minor-6]`, `[dev-minor-7]`, and `[dev-minor-8]` (below); `[dev-minor-7]` and `[dev-minor-8]` are committed locally and not yet pushed.
 - The fork's earlier `[dev-minor-2]` reworded `PARAM_COLUMNS` in `mlgwsc-1/train.py` to `mchirp, q, inclination, coa_phase, polarization_angle, declination, ra, injection_time, merger_time`, matching `ml_practice_v2/src/gwml/heads_spec.py` (metadata only, BUG-008, now `VERIFIED` in a written shard).
 - Two copies of the pipeline note now exist, `gen_py_data_pipeline.md` at the root and `mlgwsc-1/gen_py_data_pipeline.md`, and they differ (OBS-017).
 - `[dev-minor-6]` adds the seeded driver and the determinism check, both in `mlgwsc-1/`:
@@ -43,7 +43,16 @@ Updated 2026-10-22T06:27Z on `sarlws5-Precision-7820-Tower`.
   Under the FFTW default, step 1 failed by about 1e-13 in one waveform element (OBS-025), which is why the backend is pinned.
   Not yet checked at shard scale (5,000 injections): queued in `ml_practice_v2/VERIFY.md`.
 - Untracked or ignored: `combined_repackaged.hdf`, `out.hdf`, and `__pycache__/` are ignored; the scratch outputs of the check are in the session scratchpad, not in this repository.
-- Not built yet: `re_package_hdf_with_noise.py`, the merge step, and the contract check (in `ml_practice_v2`).
+- `[dev-minor-7]` adds `re_package_hdf_with_noise.py` (repo root; `re_package_hdf.py` is unchanged):
+  - It repackages one raw shard into `d<id>_<split>_<shard>_repackaged.hdf`, with `h1`, `l1` (noise + snr × unit waveform), `h1_unit_waveform`, `l1_unit_waveform`, `params` (the nine generator columns then `snr`, float64), and the noise-only rows in `noise_h1`, `noise_l1`.
+  - The SNR is uniform on (7, 15), drawn once per shard from the purpose-2 key; it copies the generation provenance and adds the source sha256, the SNR range and key, and the repackaging git SHA, time, and host.
+  - Checked on the 10-injection scratch shard: the strain equals an independent recomputation to float32 rounding (a wrong-SNR control fails), noise-only rows and parameters are copied exactly, two runs are identical, and the loader's three reads give the expected shapes and dtypes; the error paths and a full-size shard are untested.
+  - The unit waveforms are named `*_unit_waveform` because the old `h1_waveform` held the scaled waveform; nothing reads them today.
+- `[dev-minor-8]` adds `merge_hdf_shards.py` (repo root):
+  - It sorts shards by split and shard number, checks that shard numbers are contiguous and that the generating constants and library versions match, copies shard by shard into pre-sized datasets, and writes under `.partial` with `complete` last; `--expect training=10 validation=2 test=1` checks the counts.
+  - Checked ad hoc on synthetic shards copied from the one real repackaged shard: three input orders give identical arrays equal to an independent concatenation, eight failure cases raise and leave nothing behind, and the command line matches the Python call.
+  - Untested: the full merge (about 6.4 GB over 13 shards: memory and time unknown), real shards from two processes, and an interrupted write.
+- Not built yet: steps 5 and 6 of the determinism check in `check_determinism.py` (their scripts now exist, but the ad hoc results above used the one real shard and synthetic ones), a real generation of the 13 shards, and the contract check (in `ml_practice_v2`).
 
 ## The plan, in short (details in `ml_practice_v2/GENERATOR_OVERHAUL.md`)
 
@@ -59,7 +68,6 @@ Updated 2026-10-22T06:27Z on `sarlws5-Precision-7820-Tower`.
 
 ## Open
 
-- The shape of the repackaging script and the merge step is a design to be built step by step with the user's go-ahead.
-- Steps 5 and 6 of the determinism check wait for those two scripts.
-- The determinism of a full 5,000-injection shard, and the time one takes, are unknown (`ml_practice_v2/VERIFY.md`, OBS-025).
+- Steps 5 and 6 of the determinism check are not in `check_determinism.py`; wiring them needs small real shards, so a small generation and the user's go-ahead.
+- The determinism of a full 5,000-injection shard, the time one takes, and the cost of the full merge are unknown (`ml_practice_v2/VERIFY.md`, OBS-025).
 - Whether the two copies of the pipeline note are reconciled or one is dropped (OBS-017).
