@@ -12,15 +12,17 @@ The working rules, the machines table, and the full state of that project are in
 | `SEEDING.md` | the seeding scheme for the regenerated dataset, this repository's own master seed, and the determinism check |
 | `../ml_practice_v2/GENERATOR_OVERHAUL.md` | what the generator lacks (G-01 to G-24), the target output file (section 4), the decisions (section 5), and the plan (section 7) |
 | `../ml_practice_v2/BUGS.md` | BUG-007 to 009 and OBS-014 to 022 are about this generator |
-| `mlgwsc-1/gen_py_data_pipeline.md` | notes on what `gen.py` saves and how the repackaging step works (it diverges from the copy in `ml_practice_v2/src/gwml/`, OBS-017) |
+| `gen_py_data_pipeline.md` (repository root; `mlgwsc-1/gen_py_data_pipeline.md` on `thinkpad-t530`) | notes on what `gen.py` saves and how the repackaging step works (it diverges from the copy in `ml_practice_v2/src/gwml/`, OBS-017) |
 
 ## Rules for working here
 
 - **The generator backend is frozen** because it is part of a published paper: `mlgwsc-1/gen.py`, `whiten` and `regularize_psd` in `mlgwsc-1/apply.py`, and the thesis scripts are not edited, and nothing in them is made configurable.
   The only change so far is a label-level one (below), which the user accepted because it leaves the backend untouched.
   New behavior goes in new files beside them, calling the existing functions unchanged.
-- **Never push to `origin`:** it is the upstream author's GitHub repository.
-  The `dev` branch exists only in this clone, so nothing here is backed up unless the user adds a remote of their own.
+- **Remotes (reconfigured on `sarlws5-Precision-7820-Tower`, 2026-10-22T05:47Z):** `origin` is the user's fork (`syedalimohsinbukhari/ml-gw-search`), and `dev` and `main` track it.
+  `upstream` is the original author's repository (`ondrzel/ml-gw-search`); it is fetch-only, with its push URL set to `DISABLED`, and nothing is ever pushed to it.
+  Ask before pushing to `origin`; a yes covers that push only.
+  `thinkpad-t530` was not reconfigured and may still have the old layout (`origin` = the author's repository), so check `git remote -v` there before pushing.
 - **Do not run data generation on `thinkpad-t530`** (CPU-only, 8 CPUs); generation is heavy pycbc work for the workstation or the lab machine, and only with the user's go-ahead.
 - **Do not load `combined_repackaged.hdf` wholesale** (1.9 GB, untracked); read its structure with `h5py` metadata only.
 - **Commits:** ask the user first; the subject is the bare `[dev-minor-N]` label, followed by bullets that are one sentence each on one line, then the trailers (the format is in `ml_practice_v2/CLAUDE.md`, §11).
@@ -28,10 +30,12 @@ The working rules, the machines table, and the full state of that project are in
 
 ## State
 
-- Branch `dev`; HEAD is `[dev-minor-3]`, which adds `SEEDING.md` and `HANDOFF.md`; the commit before it, `[dev-minor-2]`, reworded `PARAM_COLUMNS` in `mlgwsc-1/train.py` to `mchirp, q, inclination, coa_phase, polarization_angle, declination, ra, injection_time, merger_time`, matching `ml_practice_v2/src/gwml/heads_spec.py` (metadata only, BUG-008).
-- Both commits are unpushed, and `origin` is the upstream author's repository, so nothing here is backed up.
-- Uncommitted: none of the tracked files.
-- Untracked and not committed: `re_package_hdf.py`, `mlgwsc-1/gen_py_data_pipeline.md`, `mlgwsc-1/__pycache__/`, and `combined_repackaged.hdf`.
+- Branch `dev`; HEAD is `54e2867 [dev-minor-4]`, a merge (2026-10-22T05:42Z, on `sarlws5-Precision-7820-Tower`) of two histories that had diverged from `[dev-minor-1]`: the fork's `[dev-minor-2]` and `[dev-minor-3]` (from `thinkpad-t530`) and this machine's `3a52ac1` and `6ad2c18` (also labelled `[dev-minor-2]` and `[dev-minor-3]`).
+- The fork's `[dev-minor-2]` reworded `PARAM_COLUMNS` in `mlgwsc-1/train.py` to `mchirp, q, inclination, coa_phase, polarization_angle, declination, ra, injection_time, merger_time`, matching `ml_practice_v2/src/gwml/heads_spec.py` (metadata only, BUG-008); its `[dev-minor-3]` added `SEEDING.md` and this file.
+- This machine's two commits ignore `*.hdf` and `__pycache__/`, and add `re_package_hdf.py`, `gen_py_data_pipeline.md` (at the repository root), `pyproject.toml`, and `uv.lock`.
+- `dev` is 3 commits ahead of `origin/dev` (the two local-only commits and the merge); nothing has been pushed yet.
+- Uncommitted: none of the tracked files, apart from this file's edit.
+- Ignored by `.gitignore`: `combined_repackaged.hdf`, `out.hdf`, and `__pycache__/`.
 - No driver, merge step, or repackaging script for the new dataset exists yet.
 
 ## The plan, in short (details in `ml_practice_v2/GENERATOR_OVERHAUL.md`)
