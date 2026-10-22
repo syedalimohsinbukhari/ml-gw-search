@@ -1,6 +1,6 @@
 # Handoff (ml-gw-search)
 
-Written 2026-10-19T22:10Z, on `thinkpad-t530`.
+Written 2026-10-19T22:10Z, on `thinkpad-t530`; State and Open updated 2026-10-22T06:27Z.
 This repository is the MLGWSC-1 code of Zelenka, Brügmann and Ohme (see `README.md`), used here to regenerate the training dataset of the `ml_practice_v2` q_value project.
 The working rules, the machines table, and the full state of that project are in `ml_practice_v2` (`CLAUDE.md`, `HANDOFF.md`, `BUGS.md`, `GENERATOR_OVERHAUL.md`); this file covers only what concerns this repository.
 
@@ -30,13 +30,20 @@ The working rules, the machines table, and the full state of that project are in
 
 ## State
 
-- Branch `dev`; HEAD is `54e2867 [dev-minor-4]`, a merge (2026-10-22T05:42Z, on `sarlws5-Precision-7820-Tower`) of two histories that had diverged from `[dev-minor-1]`: the fork's `[dev-minor-2]` and `[dev-minor-3]` (from `thinkpad-t530`) and this machine's `3a52ac1` and `6ad2c18` (also labelled `[dev-minor-2]` and `[dev-minor-3]`).
-- The fork's `[dev-minor-2]` reworded `PARAM_COLUMNS` in `mlgwsc-1/train.py` to `mchirp, q, inclination, coa_phase, polarization_angle, declination, ra, injection_time, merger_time`, matching `ml_practice_v2/src/gwml/heads_spec.py` (metadata only, BUG-008); its `[dev-minor-3]` added `SEEDING.md` and this file.
-- This machine's two commits ignore `*.hdf` and `__pycache__/`, and add `re_package_hdf.py`, `gen_py_data_pipeline.md` (at the repository root), `pyproject.toml`, and `uv.lock`.
-- `dev` is 3 commits ahead of `origin/dev` (the two local-only commits and the merge); nothing has been pushed yet.
-- Uncommitted: none of the tracked files, apart from this file's edit.
-- Ignored by `.gitignore`: `combined_repackaged.hdf`, `out.hdf`, and `__pycache__/`.
-- No driver, merge step, or repackaging script for the new dataset exists yet.
+Updated 2026-10-22T06:27Z on `sarlws5-Precision-7820-Tower`.
+
+- Branch `dev`, tracking `origin/dev` (the user's fork); the history is `[dev-minor-4]` (a merge of the fork's and this machine's diverged histories), `[dev-minor-5]` (the remote-layout update of this file), the user's `[dev-minor-5]` and `[dev-minor-5-1]` (the pipeline note under `mlgwsc-1/` and a `.gitignore` line for `combined_repackaged.hdf`, pulled by a rebase), and then `[dev-minor-6]` (below).
+- The fork's earlier `[dev-minor-2]` reworded `PARAM_COLUMNS` in `mlgwsc-1/train.py` to `mchirp, q, inclination, coa_phase, polarization_angle, declination, ra, injection_time, merger_time`, matching `ml_practice_v2/src/gwml/heads_spec.py` (metadata only, BUG-008, now `VERIFIED` in a written shard).
+- Two copies of the pipeline note now exist, `gen_py_data_pipeline.md` at the root and `mlgwsc-1/gen_py_data_pipeline.md`, and they differ (OBS-017).
+- `[dev-minor-6]` adds the seeded driver and the determinism check, both in `mlgwsc-1/`:
+  - `gen_seeded.py` generates one shard (`--split`, `--shard`, `--dataset-id`, `--counts`, `--out-dir`) in the raw `gen.py` layout, as `d<dataset_id>_<split>_<shard>.hdf`, written under a `.partial` name and renamed on success.
+  - It holds `MASTER_SEED`, seeds once per shard, refuses to run if the sha256 of `gen.py`, `apply.whiten`, or `apply.regularize_psd` differs from the pinned values, pins pycbc's `numpy` FFT backend (BUGS.md OBS-025 in `ml_practice_v2`), and writes the provenance attributes listed in `SEEDING.md`.
+  - `check_determinism.py` covers steps 1 to 4 of the check in `SEEDING.md`; steps 5 and 6 print `NOT RUN`.
+- Result (2026-10-22, three runs, 10 injections + 5 noise-only per shard): 9 of 9 checks passed each time with the `numpy` FFT backend.
+  Under the FFTW default, step 1 failed by about 1e-13 in one waveform element (OBS-025), which is why the backend is pinned.
+  Not yet checked at shard scale (5,000 injections): queued in `ml_practice_v2/VERIFY.md`.
+- Untracked or ignored: `combined_repackaged.hdf`, `out.hdf`, and `__pycache__/` are ignored; the scratch outputs of the check are in the session scratchpad, not in this repository.
+- Not built yet: `re_package_hdf_with_noise.py`, the merge step, and the contract check (in `ml_practice_v2`).
 
 ## The plan, in short (details in `ml_practice_v2/GENERATOR_OVERHAUL.md`)
 
@@ -52,6 +59,7 @@ The working rules, the machines table, and the full state of that project are in
 
 ## Open
 
-- The shape of the driver, the repackaging script, and the merge step is a design to be built step by step with the user's go-ahead.
-- The determinism check in `SEEDING.md` has not been run.
-- Whether to keep `re_package_hdf.py` and the pipeline note untracked, or to commit them (OBS-017).
+- The shape of the repackaging script and the merge step is a design to be built step by step with the user's go-ahead.
+- Steps 5 and 6 of the determinism check wait for those two scripts.
+- The determinism of a full 5,000-injection shard, and the time one takes, are unknown (`ml_practice_v2/VERIFY.md`, OBS-025).
+- Whether the two copies of the pipeline note are reconciled or one is dropped (OBS-017).
